@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height,target-denistydpi:device-dpi, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title> Text - N - Speech </title>
+    <style>
+        body{background:black; opacity:0.8; color:lightgrey;}
+        div#wrap{border:4px solid grey; width:80%; margin:50px auto; padding:20px 10px 30px 10px; border-radius:10%;}
+        header{text-align:center; font-weight:bolder; margin-bottom:20px;}
+        textarea,select,input{display: block; width:90%; margin:10px auto;}
+        select{padding:10px 3px 10px 3px;}
+        label{display:block; margin:10px;}
+        textarea{min-height:100px; padding:6px 10px; border-radius:10px;}
+        label{color: steelblue; font-weight:bolder;}
+        span.value{background:steelblue; padding:6px; margin-left:80%; color:black; border-radius:20%; padding-left:10px; padding-right:10px;}
+        div#notice{margin:4px; color:red; font-weight:bold;}
+        button{background: steelblue; display: block; margin:4px auto; font-weight:bolder; padding:8px; border-radius:8px;}
+
+        @media all and (max-width:720px){
+            span.value{margin-left:50%;}
+        }
+        @media all and (min-width:600px){
+            div#wrap{border-radius:5%;}
+        }
+    </style>
+</head>
+<body>
+    <div id="wrap">
+        <header><h2> TEXT - N - SPEECH </h2></header>
+        <form id="form">
+            <textarea> Insert Texts here!. </textarea>
+            <label for="Rate"> Rate <span id="ra" class="value"> 1 </span></label>
+            <input step="0.1" id="rate" type="range" min="0.1" max="2.5" value="1"> 
+            <label for="Pitch"> Pitch <span id="pi" class="value"> 1.5 </span></label>
+            <input step="0.1" id="pitch" type="range" min="0.1" max="2.5" value="1.5"> 
+           <select></select>
+           <button> Speak </button>
+        </form>
+        <div id="notice"></div>
+    </div>
+    <script type="text/javascript">
+        window.onload = function(){
+            const synth = window.speechSynthesis;
+            rate = document.querySelector('#rate');
+            pitch = document.querySelector('#pitch');
+            ra = document.querySelector('#ra');
+            pi = document.querySelector('#pi');
+            select = document.querySelector('select');
+            note = document.querySelector('#notice');
+            select = document.querySelector('select');
+            txt = document.querySelector('textarea');
+            form = document.querySelector('form');
+
+            // setting eventListener for input change
+            rate.onchange = ()=> ra.innerText = rate.value;
+            pitch.onchange = ()=> pi.innerText = pitch.value;
+
+            voices = [];
+
+            function GetVoices(){
+                if(synth){
+                    voices = synth.getVoices();
+                    if(voices.length != 0){
+                        // looping through voices 
+                        voices.forEach(voice =>{
+                            const option = document.createElement('option');
+                            option.innerText = voice.name+ voice.lang ;
+                            option.setAttribute('data-lang',voice.lang)
+                            option.setAttribute('data-name',voice.name)
+                            select.appendChild(option);
+                        });
+                    }else{
+                        note.innerText = "Your Browser supports a few voices. Switch to later version of Google Chrome to use this API effectively.";
+                        setTimeout(()=> note.innerText = "",7900);
+                    }
+                    
+                }else{
+                    note.innerText = "Your browser does not support Text to Speech API. Kindly switch to later Version of Google Chrome or other eligible browser."
+                }
+            }
+
+            // initializing speaking function
+            function speak(){
+                if(synth.speaking){
+                    alert(' Text - N - Speech is already Speaking....');
+                }
+                if(txt.value !== ''){
+                     words = new SpeechSynthesisUtterance(txt.value);
+                }
+                words.onerror = ()=> console.error('Words was not spoken!.')
+
+                // set words rate and pitch
+                words.rate = rate.value;
+                words.pitch = pitch.value;
+
+                // get user selected voice
+                selectedVoice = select.selectedOptions[0].getAttribute('data-name');
+
+                // loop through voices to target the usr selected voice
+                voices.forEach(voice=>{
+                    if(voice.name === selectedVoice){
+                        words.voice = voice;
+                    }
+                })
+                synth.speak(words);
+            }
+
+             GetVoices();
+
+            //  extracting voices 
+                if(synth.onvoiceschanged !== undefined){
+                    synth.onvoiceschanged = GetVoices;
+                }
+
+                form.onsubmit = e =>{
+                    console.log('done.')
+                    e.preventDefault();
+                    speak();
+                    txt.blur();
+                }
+
+                select.onchange = ()=>{
+                    speak();
+                }
+
+        }
+        
+    </script>
+</body>
+</html>
